@@ -181,7 +181,7 @@ jobs:
         working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: apps/web/package.json
       - uses: actions/setup-node@v4
@@ -212,7 +212,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: apps/web/package.json
       - uses: actions/setup-node@v4
@@ -259,7 +259,7 @@ jobs:
           (cd apps/api && uv sync --frozen && uv run alembic upgrade head)
           docker compose -f infra/docker-compose.yml exec -T db psql -U saathi -d saathi -v ON_ERROR_STOP=1 -f - < infra/supabase/02_rls_policies.sql
           (cd apps/api && uv run python -m saathi_api.seed)
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: apps/web/package.json
       - uses: actions/setup-node@v4
@@ -346,7 +346,7 @@ jobs:
         run: |
           uv export --frozen --no-dev --no-hashes --no-emit-project --format requirements-txt > /tmp/requirements.txt
           uvx pip-audit -r /tmp/requirements.txt --strict
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: needs.changes.outputs.web == 'true'
         with:
           package_json_file: apps/web/package.json
