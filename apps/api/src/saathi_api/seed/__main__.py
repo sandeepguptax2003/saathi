@@ -12,7 +12,8 @@ from saathi_api.seed.loader import demo_counts
 
 def main() -> None:
     counts = demo_counts()
-    sys.stdout.write("demo fixtures OK: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())) + "\n")
+    summary = ", ".join(f"{k}={v}" for k, v in sorted(counts.items()))
+    sys.stdout.write(f"demo fixtures OK: {summary}\n")
 
 
 if __name__ == "__main__":
