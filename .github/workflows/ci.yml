@@ -122,11 +122,11 @@ jobs:
       MODEL_REASONING: nvidia/nemotron-3-super-120b-a12b
       MODEL_EMBED: Qwen/Qwen3-Embedding-8B
       SUPABASE_URL: http://localhost:54321
-      SUPABASE_JWT_SECRET: ci-only-not-a-secret
-      ENCRYPTION_PEPPER: ci-only-not-a-secret
+      SUPABASE_JWT_SECRET: ci-only-not-a-secret-local-dev-only-padded-to-32
+      ENCRYPTION_PEPPER: ci-only-not-a-secret-local-dev-only-padded-to-32
       DAILY_BUDGET_USD: "1"
       CORS_ORIGINS: http://localhost:3000
-      LOG_LEVEL: info
+      LOG_LEVEL: INFO
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -400,12 +400,12 @@ jobs:
         run: |
           # --network host so the container reaches the Postgres service on localhost:5432
           docker run -d --name api --network host \
-            -e PORT=8000 -e ENV=ci -e LOG_LEVEL=info \
+            -e PORT=8000 -e ENV=test -e LOG_LEVEL=INFO \
             -e DATABASE_URL=postgresql+asyncpg://saathi:saathi_local_only@localhost:5432/saathi \
             -e NEBIUS_API_KEY=ci-mock-not-a-key -e NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1 \
             -e MODEL_FAST=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B -e MODEL_REASONING=nvidia/nemotron-3-super-120b-a12b \
             -e MODEL_EMBED=Qwen/Qwen3-Embedding-8B -e SUPABASE_URL=http://localhost:54321 \
-            -e SUPABASE_JWT_SECRET=ci-only-not-a-secret -e ENCRYPTION_PEPPER=ci-only-not-a-secret \
+            -e SUPABASE_JWT_SECRET=ci-only-not-a-secret-local-dev-only-padded-to-32 -e ENCRYPTION_PEPPER=ci-only-not-a-secret-local-dev-only-padded-to-32 \
             -e DAILY_BUDGET_USD=1 -e CORS_ORIGINS=http://localhost:3000 \
             saathi-api:ci
           for i in $(seq 1 30); do curl -fsS http://localhost:8000/health && exit 0; sleep 2; done
