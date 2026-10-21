@@ -1,0 +1,7 @@
+version: 2
+secret:
+  # Local-only dev/test values (docker Postgres, pytest fixtures). Not real secrets.
+  ignored_paths:
+    - infra/docker-compose.yml
+    - infra/api.dev.env
+    - apps/api/tests/**

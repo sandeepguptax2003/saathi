@@ -344,7 +344,7 @@ jobs:
         if: needs.changes.outputs.api == 'true'
         working-directory: apps/api
         run: |
-          uv export --frozen --no-dev --no-hashes --format requirements-txt > /tmp/requirements.txt
+          uv export --frozen --no-dev --no-hashes --no-emit-project --format requirements-txt > /tmp/requirements.txt
           uvx pip-audit -r /tmp/requirements.txt --strict
       - uses: pnpm/action-setup@v4
         if: needs.changes.outputs.web == 'true'
@@ -389,7 +389,7 @@ jobs:
       - name: Image size (target < 200 MB)
         run: docker image ls saathi-api:ci --format '{{.Repository}}:{{.Tag}} {{.Size}}'
       - name: Trivy (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: saathi-api:ci
           severity: HIGH,CRITICAL
