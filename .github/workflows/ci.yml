@@ -37,7 +37,7 @@ jobs:
       web: ${{ steps.out.outputs.web }}
       infra: ${{ steps.out.outputs.infra }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v3
         id: filter
         if: github.event_name == 'pull_request' || github.event_name == 'push'
@@ -82,7 +82,7 @@ jobs:
       run:
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.UV_VERSION }}
@@ -128,7 +128,7 @@ jobs:
       CORS_ORIGINS: http://localhost:3000
       LOG_LEVEL: INFO
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.UV_VERSION }}
@@ -180,7 +180,7 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: apps/web/package.json
@@ -211,7 +211,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: apps/web/package.json
@@ -241,7 +241,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
       LLM_MOCK: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       - name: Start db + api
         run: |
@@ -327,7 +327,7 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
@@ -375,7 +375,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
