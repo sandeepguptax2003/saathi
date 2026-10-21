@@ -1,0 +1,47 @@
+name: Bug report
+description: Something in Saathi is broken
+title: "fix: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please use demo data only. Never paste real phone numbers, Aadhaar, PAN, UPI IDs, or keys."
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open /console
+        2. Say "kal ka schedule batao"
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [voice, chat / assistant, memory, approvals, privacy masking, budget, skills, web UI, infra / deploy, other]
+    validations:
+      required: true
+  - type: input
+    id: request_id
+    attributes:
+      label: Request ID
+      description: From the error toast or X-Request-ID header, if shown.
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "prod / local · Chrome 130 · Android"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      render: shell

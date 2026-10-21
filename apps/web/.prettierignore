@@ -1,0 +1,9 @@
+.next
+node_modules
+coverage
+playwright-report
+test-results
+public/sw.js
+public/swe-worker-*.js
+pnpm-lock.yaml
+src/types/api.generated.ts

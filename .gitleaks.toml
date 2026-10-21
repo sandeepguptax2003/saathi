@@ -1,0 +1,14 @@
+# Extends the default gitleaks rules. Allowlist only known non-secret local dev placeholders.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Local-only placeholders and templates"
+paths = [
+  '''infra/api\.dev\.env''',
+  '''(^|/)\.env\.example$''',
+]
+regexes = [
+  '''local-dev-only-not-a-secret''',
+  '''saathi_local_only''',
+]

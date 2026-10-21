@@ -1,0 +1,425 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Nightly 02:30 IST (21:00 UTC): live Nemotron Nano smoke with a tiny budget.
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+  UV_VERSION: "latest"
+  E2E_TELEMETRY_DISABLED: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+  # Local-only DB credentials for the service container; not a secret.
+  PSQL_URL: postgresql://saathi:saathi_local_only@localhost:5432/saathi_test
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      api: ${{ steps.out.outputs.api }}
+      web: ${{ steps.out.outputs.web }}
+      infra: ${{ steps.out.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'infra/**'
+              - '.github/workflows/ci.yml'
+            web:
+              - 'apps/web/**'
+              - '.github/workflows/ci.yml'
+              - '.github/lighthouse/**'
+            infra:
+              - 'infra/**'
+              - '.github/workflows/**'
+      # Scheduled / manual runs test everything.
+      - id: out
+        run: |
+          echo "api=${{ steps.filter.outputs.api || 'true' }}" >> "$GITHUB_OUTPUT"
+          echo "web=${{ steps.filter.outputs.web || 'true' }}" >> "$GITHUB_OUTPUT"
+          echo "infra=${{ steps.filter.outputs.infra || 'true' }}" >> "$GITHUB_OUTPUT"
+
+  pr-title:
+    name: Conventional PR title
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------- API
+  api-quality:
+    name: API · lint + types
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy --strict src
+
+  api-test:
+    name: API · tests + migrations
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: saathi
+          POSTGRES_PASSWORD: saathi_local_only
+          POSTGRES_DB: saathi_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U saathi -d saathi_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ENV: test
+      DATABASE_URL: postgresql+asyncpg://saathi:saathi_local_only@localhost:5432/saathi_test
+      NEBIUS_BASE_URL: https://api.tokenfactory.nebius.com/v1
+      NEBIUS_API_KEY: ci-mock-not-a-key
+      MODEL_FAST: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
+      MODEL_REASONING: nvidia/nemotron-3-super-120b-a12b
+      MODEL_EMBED: Qwen/Qwen3-Embedding-8B
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_JWT_SECRET: ci-only-not-a-secret
+      ENCRYPTION_PEPPER: ci-only-not-a-secret
+      DAILY_BUDGET_USD: "1"
+      CORS_ORIGINS: http://localhost:3000
+      LOG_LEVEL: info
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: Prepare DB (auth stub + extensions)
+        run: |
+          psql "$PSQL_URL" -v ON_ERROR_STOP=1 -f infra/supabase/00_local_auth_stub.sql
+          psql "$PSQL_URL" -v ON_ERROR_STOP=1 -f infra/supabase/01_extensions.sql
+      - run: uv sync --frozen
+        working-directory: apps/api
+      - name: Migrations up / down / up
+        working-directory: apps/api
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+      - name: Apply + verify RLS policies
+        run: |
+          psql "$PSQL_URL" -v ON_ERROR_STOP=1 -f infra/supabase/02_rls_policies.sql
+          psql "$PSQL_URL" -v ON_ERROR_STOP=1 -f infra/supabase/03_verify_rls.sql
+          missing=$(psql "$PSQL_URL" -tA -c "select string_agg(relname, ',') from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relname <> 'alembic_version' and not c.relrowsecurity")
+          if [ -n "$missing" ]; then echo "::error::RLS disabled on: $missing"; exit 1; fi
+      - name: Pytest + coverage
+        working-directory: apps/api
+        run: |
+          uv run pytest \
+            --cov=saathi_api.core \
+            --cov=saathi_api.modules.privacy \
+            --cov=saathi_api.modules.approvals \
+            --cov=saathi_api.modules.budget \
+            --cov-report=term-missing --cov-report=xml \
+            --cov-fail-under=80
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-coverage
+          path: apps/api/coverage.xml
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------- WEB
+  web-quality:
+    name: Web · lint + types
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec eslint . --max-warnings=0
+      - run: pnpm exec prettier --check .
+      - run: pnpm exec tsc --noEmit
+      - name: Generated API types match openapi.json
+        run: |
+          pnpm run --if-present types:check
+          git diff --exit-code -- src/types/api.ts
+
+  web-test:
+    name: Web · unit + build
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('apps/web/pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**') }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('apps/web/pnpm-lock.yaml') }}-
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec vitest run --coverage
+      - run: pnpm build
+
+  # ---------------------------------------------------------------- E2E + LIGHTHOUSE
+  e2e:
+    name: E2E · Playwright (LLM mocked)
+    needs: [changes, api-test, web-test]
+    if: always() && !cancelled() && (needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true') && !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      LLM_MOCK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Start db + api
+        run: |
+          docker compose -f infra/docker-compose.yml up -d --build --wait db api
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: Migrate + RLS + seed (compose DB on localhost)
+        env:
+          DATABASE_URL: postgresql+asyncpg://saathi:saathi_local_only@localhost:5432/saathi
+        run: |
+          (cd apps/api && uv sync --frozen && uv run alembic upgrade head)
+          docker compose -f infra/docker-compose.yml exec -T db psql -U saathi -d saathi -v ON_ERROR_STOP=1 -f - < infra/supabase/02_rls_policies.sql
+          (cd apps/api && uv run python -m saathi_api.seed)
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - name: Build + start web
+        working-directory: apps/web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          nohup pnpm start --port 3000 > /tmp/web.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:3000 >/dev/null && break; sleep 2; done
+      - name: Playwright
+        working-directory: apps/web
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec playwright test
+      - name: Compose logs on failure
+        if: failure()
+        run: |
+          docker compose -f infra/docker-compose.yml logs --no-color api db | tail -n 300
+          tail -n 200 /tmp/web.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          if-no-files-found: ignore
+      - name: Lighthouse CI (>= 90 perf / a11y / best-practices / SEO)
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./.github/lighthouse/lighthouserc.json
+          uploadArtifacts: true
+      - if: always()
+        run: docker compose -f infra/docker-compose.yml down -v
+
+  e2e-live:
+    name: Nightly · live Nemotron Nano smoke
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      NEBIUS_API_KEY: ${{ secrets.NEBIUS_API_KEY_NIGHTLY }}
+      NEBIUS_BASE_URL: https://api.tokenfactory.nebius.com/v1
+      MODEL_FAST: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
+    steps:
+      - name: Skip when the nightly key is not configured
+        id: guard
+        run: |
+          if [ -z "$NEBIUS_API_KEY" ]; then echo "run=false" >> "$GITHUB_OUTPUT"; echo "NEBIUS_API_KEY_NIGHTLY not set; skipping."; else echo "run=true" >> "$GITHUB_OUTPUT"; fi
+      - name: One tiny chat completion (max_tokens 64)
+        if: steps.guard.outputs.run == 'true'
+        run: |
+          body=$(jq -n --arg m "$MODEL_FAST" '{model:$m,max_tokens:64,messages:[{role:"user",content:"Reply with: ok"}]}')
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' --max-time 60 \
+            -H "Authorization: Bearer $NEBIUS_API_KEY" -H "Content-Type: application/json" \
+            -d "$body" "$NEBIUS_BASE_URL/chat/completions")
+          echo "HTTP $code"; jq '{model, usage}' /tmp/out.json || true
+          test "$code" = "200"
+
+  # ---------------------------------------------------------------- SECURITY + DOCKER
+  security:
+    name: Security · secrets + dependency audit
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: astral-sh/setup-uv@v6
+        if: needs.changes.outputs.api == 'true'
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: pip-audit
+        if: needs.changes.outputs.api == 'true'
+        working-directory: apps/api
+        run: |
+          uv export --frozen --no-dev --no-hashes --format requirements-txt > /tmp/requirements.txt
+          uvx pip-audit -r /tmp/requirements.txt --strict
+      - uses: pnpm/action-setup@v4
+        if: needs.changes.outputs.web == 'true'
+        with:
+          package_json_file: apps/web/package.json
+      - name: pnpm audit
+        if: needs.changes.outputs.web == 'true'
+        working-directory: apps/web
+        run: pnpm audit --prod --audit-level=high
+
+  docker:
+    name: Docker · build, scan, smoke
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: saathi
+          POSTGRES_PASSWORD: saathi_local_only
+          POSTGRES_DB: saathi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U saathi -d saathi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: apps/api
+          file: apps/api/Dockerfile
+          tags: saathi-api:ci
+          load: true
+          push: false
+          cache-from: type=gha,scope=saathi-api
+          cache-to: type=gha,mode=max,scope=saathi-api
+      - name: Image size (target < 200 MB)
+        run: docker image ls saathi-api:ci --format '{{.Repository}}:{{.Tag}} {{.Size}}'
+      - name: Trivy (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: saathi-api:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+      - name: Smoke run /health
+        run: |
+          # --network host so the container reaches the Postgres service on localhost:5432
+          docker run -d --name api --network host \
+            -e PORT=8000 -e ENV=ci -e LOG_LEVEL=info \
+            -e DATABASE_URL=postgresql+asyncpg://saathi:saathi_local_only@localhost:5432/saathi \
+            -e NEBIUS_API_KEY=ci-mock-not-a-key -e NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1 \
+            -e MODEL_FAST=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B -e MODEL_REASONING=nvidia/nemotron-3-super-120b-a12b \
+            -e MODEL_EMBED=Qwen/Qwen3-Embedding-8B -e SUPABASE_URL=http://localhost:54321 \
+            -e SUPABASE_JWT_SECRET=ci-only-not-a-secret -e ENCRYPTION_PEPPER=ci-only-not-a-secret \
+            -e DAILY_BUDGET_USD=1 -e CORS_ORIGINS=http://localhost:3000 \
+            saathi-api:ci
+          for i in $(seq 1 30); do curl -fsS http://localhost:8000/health && exit 0; sleep 2; done
+          docker logs api; exit 1
+
+  # Single required check for branch protection.
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [changes, pr-title, api-quality, api-test, web-quality, web-test, e2e, security, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any required job failed or was cancelled
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -e 'to_entries | all(.value.result != "failure" and .value.result != "cancelled")'

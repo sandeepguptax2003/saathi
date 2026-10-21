@@ -1,0 +1,8 @@
+# apps/web is installed standalone (`cd apps/web && pnpm install`).
+# pnpm >= 11 fails the install on unapproved build scripts; approve the ones we need.
+# If a root workspace is added later, move `allowBuilds` there and delete this file.
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+  sharp: true
+  "@tailwindcss/oxide": true

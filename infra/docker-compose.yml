@@ -1,0 +1,92 @@
+# Saathi local stack: Postgres+pgvector, FastAPI (hot reload), Next.js (pnpm dev).
+# Run from repo root:  make dev     (or: docker compose -f infra/docker-compose.yml up --build)
+# Local-only credentials below are NOT secrets and never used outside your machine.
+name: saathi
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: saathi
+      POSTGRES_PASSWORD: saathi_local_only
+      POSTGRES_DB: saathi
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs once on first init (empty volume): auth.uid() shim + pgvector.
+      - ./supabase/00_local_auth_stub.sql:/docker-entrypoint-initdb.d/00_local_auth_stub.sql:ro
+      - ./supabase/01_extensions.sql:/docker-entrypoint-initdb.d/01_extensions.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saathi -d saathi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      # Later files win: non-secret dev defaults first, then your own apps/api/.env if present.
+      - path: ./api.dev.env
+        required: true
+      - path: ../apps/api/.env
+        required: false
+    environment:
+      # Always point the container at the compose DB, whatever apps/api/.env says.
+      DATABASE_URL: postgresql+asyncpg://saathi:saathi_local_only@db:5432/saathi
+      PORT: "8000"
+      # CI/e2e sets LLM_MOCK=1 so no Token Factory call is made.
+      LLM_MOCK: ${LLM_MOCK:-0}
+    command:
+      - uvicorn
+      - saathi_api.main:app
+      - --host=0.0.0.0
+      - --port=8000
+      - --reload
+      - --app-dir=/app/src
+      - --reload-dir=/app/src
+    volumes:
+      # Hot reload: host source shadows the copy baked into the image.
+      - ../apps/api/src:/app/src
+    ports:
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    depends_on:
+      api:
+        condition: service_started
+    env_file:
+      - path: ../apps/web/.env.local
+        required: false
+    environment:
+      # Browser calls the API through the host port.
+      NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8000}
+      NEXT_TELEMETRY_DISABLED: "1"
+      WATCHPACK_POLLING: "true"
+    command: sh -c "corepack enable && pnpm install && pnpm dev --hostname 0.0.0.0 --port 3000"
+    volumes:
+      - ../apps/web:/app
+      - web_node_modules:/app/node_modules
+      - web_next:/app/.next
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+
+volumes:
+  pgdata:
+  web_node_modules:
+  web_next:

@@ -1,0 +1,7 @@
+[
+  {"id": "bill-001", "biller": "BESCOM Electricity", "category": "electricity", "amountInr": 1249, "dueInDays": 2, "accountRef": "consumer no. 7712045563", "payee": "bescom@okhdfcbank"},
+  {"id": "bill-002", "biller": "Airtel Postpaid", "category": "mobile", "amountInr": 599, "dueInDays": 5, "accountRef": "mobile 91234 56780", "payee": "airtel.postpaid@okicici"},
+  {"id": "bill-003", "biller": "HDFC Credit Card", "category": "credit_card", "amountInr": 18450, "dueInDays": 9, "accountRef": "card ending 4242", "payee": "hdfc.cards@okhdfcbank"},
+  {"id": "bill-004", "biller": "LIC Premium", "category": "insurance", "amountInr": 12300, "dueInDays": 6, "accountRef": "policy 912345678", "payee": "lic.premium@okaxis"},
+  {"id": "bill-005", "biller": "ACT Fibernet", "category": "internet", "amountInr": 1060, "dueInDays": -1, "accountRef": "account 104477812", "payee": "act.fibernet@okaxis"}
+]

@@ -1,0 +1,67 @@
+name: Deploy API
+
+# Runs after CI finishes on main. Deploys only when CI succeeded on a push to main.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Render deploy + smoke
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.API_URL }}
+    env:
+      RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+      API_URL: ${{ vars.API_URL }}
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - name: Check configuration
+        run: |
+          test -n "$RENDER_DEPLOY_HOOK" || { echo "::error::secret RENDER_DEPLOY_HOOK is not set"; exit 1; }
+          test -n "$API_URL" || { echo "::error::repo variable API_URL is not set"; exit 1; }
+
+      - name: Trigger Render deploy hook
+        run: |
+          # The hook URL is a secret; never echo it.
+          code=$(curl -sS -o /tmp/hook.json -w '%{http_code}' -X POST "${RENDER_DEPLOY_HOOK}")
+          echo "Render hook HTTP $code"
+          test "$code" -ge 200 -a "$code" -lt 300
+
+      - name: Wait for /ready (up to ~12 min, free tier builds are slow)
+        run: |
+          sleep 60
+          for i in $(seq 1 44); do
+            code=$(curl -sS -o /tmp/ready.json -w '%{http_code}' --max-time 20 "$API_URL/ready" || echo 000)
+            echo "attempt $i: /ready -> $code"
+            if [ "$code" = "200" ]; then cat /tmp/ready.json; exit 0; fi
+            sleep 15
+          done
+          echo "::error::API did not become ready"; exit 1
+
+      - name: Smoke /health
+        run: curl -fsS --max-time 20 "$API_URL/health"
+
+      - name: Post status
+        if: always()
+        run: |
+          {
+            echo "### API deploy: ${{ job.status }}"
+            echo "- Commit: \`${SHA}\`"
+            echo "- URL: ${API_URL}"
+            echo "- /ready: $(cat /tmp/ready.json 2>/dev/null || echo 'n/a')"
+          } >> "$GITHUB_STEP_SUMMARY"

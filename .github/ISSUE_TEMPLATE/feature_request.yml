@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest an idea for Saathi
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who needs this and what is hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should Saathi do? Example Hinglish utterances welcome.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy and safety
+      options:
+        - label: Needs new personal data (explain in Proposal how it is masked / encrypted)
+        - label: Has side effects (send / book / pay), so must go through the approval gate
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

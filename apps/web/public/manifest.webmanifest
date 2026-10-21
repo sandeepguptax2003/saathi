@@ -1,0 +1,23 @@
+{
+  "name": "Saathi · Private Hindi-English voice assistant",
+  "short_name": "Saathi",
+  "description": "Speak in Hinglish. Saathi masks your personal data and never acts without your tap.",
+  "start_url": "/console",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbf8f3",
+  "theme_color": "#e0782f",
+  "lang": "en-IN",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+[
+  {"id": "ev-001", "title": "Standup", "dayOffset": 0, "start": "09:30", "durationMin": 15, "location": "Google Meet"},
+  {"id": "ev-002", "title": "Doctor appointment, Dr. Iyer (Apollo Clinic)", "dayOffset": 0, "start": "13:00", "durationMin": 30, "location": "Apollo Clinic, Indiranagar"},
+  {"id": "ev-003", "title": "Sprint review", "dayOffset": 0, "start": "16:00", "durationMin": 60, "location": "Zoom"},
+  {"id": "ev-004", "title": "Gym", "dayOffset": 0, "start": "19:00", "durationMin": 60, "location": "Cult.fit HSR"},
+  {"id": "ev-005", "title": "Mysuru trip (Shatabdi 11:00)", "dayOffset": 3, "start": "10:15", "durationMin": 480, "location": "KSR Bengaluru"},
+  {"id": "ev-006", "title": "Sunday lunch at home", "dayOffset": 4, "start": "13:00", "durationMin": 120, "location": "Home"}
+]

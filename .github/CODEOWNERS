@@ -1,0 +1,10 @@
+# Default owner for everything. Required review on main.
+*                       @sandeepguptax2003
+
+# Security-sensitive paths (listed explicitly so ownership survives future additions).
+/infra/                 @sandeepguptax2003
+/.github/               @sandeepguptax2003
+/apps/api/src/saathi_api/modules/privacy/    @sandeepguptax2003
+/apps/api/src/saathi_api/modules/approvals/  @sandeepguptax2003
+/apps/api/migrations/   @sandeepguptax2003
+/SECURITY.md            @sandeepguptax2003

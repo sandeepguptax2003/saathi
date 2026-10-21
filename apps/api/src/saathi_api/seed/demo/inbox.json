@@ -1,0 +1,63 @@
+[
+  {
+    "id": "em-001",
+    "from": "alerts@hdfcbank-demo.example",
+    "fromName": "HDFC Bank (demo)",
+    "subject": "Credit card statement: total due ₹18,450 by the 5th",
+    "snippet": "Your statement for card ending 4242 is ready. Minimum due ₹920.",
+    "receivedHoursAgo": 3,
+    "labels": ["bills"],
+    "unread": true
+  },
+  {
+    "id": "em-002",
+    "from": "maa.sharma@example.com",
+    "fromName": "Maa",
+    "subject": "Sunday ko ghar aa rahi ho?",
+    "snippet": "Beta, Sunday lunch pe aa jao. Papa ka number 98765 43210 pe call kar lena.",
+    "receivedHoursAgo": 5,
+    "labels": ["personal"],
+    "unread": true
+  },
+  {
+    "id": "em-003",
+    "from": "ticketadmin@irctc-demo.example",
+    "fromName": "IRCTC (demo)",
+    "subject": "Booking confirmed: PNR 4521367890, KSR Bengaluru to Mysuru",
+    "snippet": "Train 12007 Shatabdi, coach C2 seat 41, departs 11:00 on Saturday.",
+    "receivedHoursAgo": 20,
+    "labels": ["travel"],
+    "unread": false
+  },
+  {
+    "id": "em-004",
+    "from": "rahul.verma@acme-demo.example",
+    "fromName": "Rahul Verma",
+    "subject": "Sprint review moved to 4 pm today",
+    "snippet": "Hi Priya, can you share the demo build link before 3:30? Thanks.",
+    "receivedHoursAgo": 1,
+    "labels": ["work"],
+    "unread": true,
+    "needsReply": true
+  },
+  {
+    "id": "em-005",
+    "from": "offers@swiggy-demo.example",
+    "fromName": "Swiggy (demo)",
+    "subject": "Flat 50% off on your next 3 orders",
+    "snippet": "Use code TASTY50. Valid till Sunday.",
+    "receivedHoursAgo": 8,
+    "labels": ["promotions"],
+    "unread": true
+  },
+  {
+    "id": "em-006",
+    "from": "noreply@licindia-demo.example",
+    "fromName": "LIC (demo)",
+    "subject": "Premium reminder: policy 912345678 due in 6 days",
+    "snippet": "Pay ₹12,300 via UPI to lic.premium@okaxis or net banking.",
+    "receivedHoursAgo": 30,
+    "labels": ["bills"],
+    "unread": false
+  }
+]

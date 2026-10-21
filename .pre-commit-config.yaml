@@ -1,0 +1,50 @@
+# Install: pipx install pre-commit && pre-commit install
+# Refresh pinned versions: pre-commit autoupdate
+default_install_hook_types: [pre-commit]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+
+  # Python (apps/api) — config comes from apps/api/pyproject.toml
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.0
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        files: ^apps/api/
+      - id: ruff-format
+        files: ^apps/api/
+
+  # Formatting for web + docs + config
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.6.2
+    hooks:
+      - id: prettier
+        files: ^(apps/web/|docs/|\.github/|infra/).*\.(ts|tsx|js|mjs|cjs|json|css|md|ya?ml)$
+        exclude: ^apps/web/src/types/api\.ts$
+
+  # ESLint uses the web app's own install so plugins/config match CI
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint (apps/web)
+        language: system
+        entry: bash -c 'cd apps/web && pnpm exec eslint --max-warnings=0 "${@#apps/web/}"' --
+        files: ^apps/web/.*\.(ts|tsx|js|mjs)$
+
+  # Secret scanning — blocks the commit if anything looks like a key
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.27.2
+    hooks:
+      - id: gitleaks
