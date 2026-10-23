@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Annotated, Literal
+from urllib.parse import quote
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 Environment = Literal["local", "test", "preview", "production"]
+
+
+_DB_PASSWORD_PLACEHOLDER = "[YOUR-PASSWORD]"  # noqa: S105 - placeholder token, not a secret
 
 
 class ModelPrice:
@@ -64,6 +68,10 @@ class Settings(BaseSettings):
 
     # --- database
     database_url: str
+    database_password: SecretStr | None = Field(
+        default=None,
+        description="Fills the [YOUR-PASSWORD] placeholder in DATABASE_URL (Supabase format)",
+    )
     db_pool_size: int = Field(default=5, ge=1, le=50)
     db_max_overflow: int = Field(default=5, ge=0, le=50)
     db_pgbouncer: bool = Field(
@@ -152,6 +160,13 @@ class Settings(BaseSettings):
             raise ValueError("GLOBAL_DAILY_BUDGET_USD must be >= DAILY_BUDGET_USD")
         if self.encryption_key_version in self.encryption_legacy_peppers:
             raise ValueError("current ENCRYPTION_KEY_VERSION must not appear in legacy peppers")
+        if _DB_PASSWORD_PLACEHOLDER in self.database_url:
+            if self.database_password is None:
+                raise ValueError("DATABASE_URL has [YOUR-PASSWORD]; set DATABASE_PASSWORD")
+            self.database_url = self.database_url.replace(
+                _DB_PASSWORD_PLACEHOLDER,
+                quote(self.database_password.get_secret_value(), safe=""),
+            )
         return self
 
     @property
