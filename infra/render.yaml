@@ -41,8 +41,9 @@ services:
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false
+      # Render generates a random 256-bit value once at creation. Never regenerate: it keys stored ciphertext.
       - key: ENCRYPTION_PEPPER
-        sync: false
+        generateValue: true
       - key: DAILY_BUDGET_USD
         sync: false
       - key: CORS_ORIGINS
