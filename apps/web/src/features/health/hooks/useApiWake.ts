@@ -16,11 +16,12 @@ export interface UseApiWakeOptions {
 
 /**
  * Pings GET /health until the free-tier API answers (Render cold start can take ~1 min).
+ * Render holds a request open while the instance boots, so each ping waits up to 60 s.
  */
 export function useApiWake({
   graceMs = 1500,
-  pollMs = 3000,
-  giveUpMs = 90_000,
+  pollMs = 2000,
+  giveUpMs = 180_000,
 }: UseApiWakeOptions = {}) {
   const [status, setStatus] = useState<WakeStatus>("checking");
   const [elapsed, setElapsed] = useState(0);
@@ -39,7 +40,7 @@ export function useApiWake({
 
     (async () => {
       while (!cancelled.current) {
-        if (await checkHealth(env.NEXT_PUBLIC_API_URL)) {
+        if (await checkHealth(env.NEXT_PUBLIC_API_URL, 60_000)) {
           if (!cancelled.current) setStatus("ready");
           return;
         }
