@@ -125,14 +125,18 @@ export interface PrivacyPreview {
 /* ---------- budget ---------- */
 export interface BudgetModelUsage {
   model: string;
-  spendUsd: number;
+  calls: number;
   tokensIn: number;
   tokensOut: number;
+  costUsd: number;
 }
 
 export interface BudgetUsage {
   range: "day" | "week";
-  spendUsd: number;
+  spentUsd: number;
   capUsd: number;
+  remainingUsd: number;
+  alert: boolean;
+  globalCapReached: boolean;
   byModel: BudgetModelUsage[];
 }
