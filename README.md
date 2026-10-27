@@ -2,7 +2,7 @@
 
 > Speak in Hindi, English, or Hinglish. Saathi remembers only what you allow, runs everyday tasks, masks your personal data before any model sees it, and never sends, books, or pays without your tap.
 
-**Live demo:** `<DEMO_URL>` · **Video (≤ 3 min):** `<YOUTUBE_URL>` · **Devpost:** `<DEVPOST_URL>`
+**Live demo:** [saathi-sandeepguptax2003gmailcoms-projects.vercel.app](https://saathi-sandeepguptax2003gmailcoms-projects.vercel.app) (click **Try demo**; the free API may take up to a minute to wake on the first visit) · **Video (≤ 3 min):** `<YOUTUBE_URL>` · **Devpost:** `<DEVPOST_URL>`
 
 <!-- Replace the three placeholders before submission. Screenshot/GIF goes here: docs/assets/hero.gif -->
 

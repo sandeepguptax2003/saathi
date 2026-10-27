@@ -12,7 +12,7 @@ export function BudgetMeter() {
   const query = useBudgetUsage("day");
   if (query.isError) return null; // Non-critical widget; hide when unavailable.
   const usage = query.data;
-  const pct = usage && usage.capUsd > 0 ? Math.min(100, (usage.spendUsd / usage.capUsd) * 100) : 0;
+  const pct = usage && usage.capUsd > 0 ? Math.min(100, (usage.spentUsd / usage.capUsd) * 100) : 0;
   return (
     <Card>
       <CardHeader>
@@ -37,7 +37,7 @@ export function BudgetMeter() {
             </div>
             <p className="text-sm text-muted-foreground">
               {t("budget.of", {
-                spent: formatUsd(usage.spendUsd),
+                spent: formatUsd(usage.spentUsd),
                 cap: formatUsd(usage.capUsd, 2),
               })}
             </p>

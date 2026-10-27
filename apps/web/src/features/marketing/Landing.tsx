@@ -12,12 +12,15 @@ import {
   ZapIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { LocaleToggle } from "@/components/common/LocaleToggle";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TryDemoButton } from "@/features/auth/components/TryDemoButton";
+import { checkHealth } from "@/lib/api/health";
+import { env } from "@/lib/env";
 import type { MessageKey } from "@/lib/i18n/dictionaries";
 import { useT } from "@/lib/i18n/I18nProvider";
 
@@ -58,6 +61,10 @@ const PRIVACY: { icon: typeof EyeOffIcon; text: MessageKey }[] = [
 
 export function Landing() {
   const t = useT();
+  // Start waking the free-tier API while the visitor reads, so the app is ready on click.
+  useEffect(() => {
+    void checkHealth(env.NEXT_PUBLIC_API_URL, 60_000);
+  }, []);
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">

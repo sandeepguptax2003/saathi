@@ -13,32 +13,31 @@ export interface WakingSaathiProps {
   onRetry?: () => void;
 }
 
-/** Shown while the free-tier API cold-starts (Render sleeps after ~15 min idle). */
+/** Non-blocking banner shown while the free-tier API cold-starts (Render sleeps after ~15 min idle). */
 export function WakingSaathi({ elapsedSeconds, failed, onRetry }: WakingSaathiProps) {
   const t = useT();
   return (
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-0 z-40 flex items-center justify-center bg-background/85 backdrop-blur-sm"
+      className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4"
     >
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-4 flex max-w-sm flex-col items-center gap-4 rounded-2xl border bg-card p-8 text-center shadow-lg"
+        className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-xl border bg-card p-3 shadow-lg"
       >
-        <motion.div
-          aria-hidden="true"
-          className="flex size-16 items-center justify-center rounded-full bg-primary/15 text-3xl"
-          animate={failed ? undefined : { scale: [1, 1.08, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
+        <span aria-hidden="true" className="text-2xl">
           🪔
-        </motion.div>
-        <h2 className="text-lg font-semibold">{failed ? t("wake.failed") : t("wake.title")}</h2>
-        <p className="text-sm text-muted-foreground">{t("wake.body")}</p>
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{failed ? t("wake.failed") : t("wake.title")}</p>
+          <p className="text-xs text-muted-foreground">{t("wake.body")}</p>
+        </div>
         {failed ? (
-          <Button onClick={onRetry}>{t("common.retry")}</Button>
+          <Button size="sm" onClick={onRetry}>
+            {t("common.retry")}
+          </Button>
         ) : (
           <div className="flex items-center gap-2">
             <Loader size="sm" label={t("wake.title")} />
