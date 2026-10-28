@@ -5,6 +5,20 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). From the first release onward this file is
 maintained by release-please from Conventional Commit messages.
 
+## [0.2.0](https://github.com/sandeepguptax2003/saathi/compare/v0.1.0...v0.2.0) (2026-10-28)
+
+
+### Features
+
+* **api:** verify Supabase asymmetric JWTs via JWKS; DATABASE_PASSWORD placeholder fill ([20bc24a](https://github.com/sandeepguptax2003/saathi/commit/20bc24a601dbfa59746c7909f5a94012b13a8a8f))
+
+
+### Bug Fixes
+
+* **api:** add seed entrypoint that validates demo fixtures ([585db69](https://github.com/sandeepguptax2003/saathi/commit/585db69efe7e0fea6c82b87526d1221a5e53c94d))
+* **web:** non-blocking API wake, budget meter NaN, README demo link ([#14](https://github.com/sandeepguptax2003/saathi/issues/14)) ([0cb622a](https://github.com/sandeepguptax2003/saathi/commit/0cb622a9cfd15ea529f3f752b94ddc6829b11511))
+* **web:** show all mic errors ([d83b176](https://github.com/sandeepguptax2003/saathi/commit/d83b176affc92d322eb912850b7fd56b7041b895))
+
 ## [Unreleased]
 
 ### Added
