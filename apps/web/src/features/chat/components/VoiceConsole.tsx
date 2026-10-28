@@ -139,7 +139,11 @@ export function VoiceConsole() {
           />
           <p className="text-xs text-muted-foreground" aria-live="polite">
             {stt.listening ? t("console.mic.listening") : null}
-            {stt.error === "not-allowed" ? t("console.micDenied") : null}
+            {stt.error === "not-allowed"
+              ? t("console.micDenied")
+              : stt.error
+                ? t("console.micError", { error: stt.error })
+                : null}
           </p>
           {!stt.supported ? (
             <p
