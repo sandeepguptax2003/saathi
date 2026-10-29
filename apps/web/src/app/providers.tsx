@@ -11,7 +11,7 @@ import { makeQueryClient } from "@/lib/query-client";
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(makeQueryClient);
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
       <I18nProvider>
         <QueryClientProvider client={queryClient}>
           {children}

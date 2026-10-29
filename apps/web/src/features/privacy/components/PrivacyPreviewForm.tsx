@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { isApiError } from "@/lib/api/errors";
+import { errorText } from "@/lib/i18n/errorText";
 import { useT } from "@/lib/i18n/I18nProvider";
 
 import { usePrivacyPreview } from "../hooks/usePrivacy";
@@ -49,7 +50,7 @@ export function PrivacyPreviewForm() {
         </form>
         {preview.isError ? (
           <p role="alert" className="text-sm text-destructive">
-            {preview.error.message}
+            {errorText(t, preview.error)}
             {isApiError(preview.error) && preview.error.requestId
               ? ` · ${t("common.requestId", { id: preview.error.requestId })}`
               : null}

@@ -90,6 +90,19 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
   }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="switch"],
+  [role="tab"],
+  [role="menuitem"],
+  select,
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+  :disabled {
+    cursor: not-allowed;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

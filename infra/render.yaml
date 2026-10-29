@@ -1,8 +1,7 @@
 # Render Blueprint for the Saathi API (free web service, Docker, Singapore).
 # Point the Render Blueprint at this file: Dashboard -> Blueprints -> New -> path "infra/render.yaml".
 # Keys only. Every value is entered in the Render dashboard (sync: false) and never committed.
-# Deploys are triggered by .github/workflows/deploy-api.yml (deploy hook) after CI is green,
-# so Render's own auto-deploy is off to avoid double deploys.
+# Render auto-deploys on every push to main that touches apps/api.
 services:
   - type: web
     name: saathi-api
@@ -12,7 +11,7 @@ services:
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: ./apps/api
     healthCheckPath: /health
-    autoDeployTrigger: "off"
+    autoDeployTrigger: "commit"
     buildFilter:
       paths:
         - apps/api/**

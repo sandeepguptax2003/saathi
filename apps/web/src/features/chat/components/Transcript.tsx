@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
 import { Loader } from "@/components/common/Loader";
+import { errorCodeText } from "@/lib/i18n/errorText";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +52,7 @@ export function Transcript({
           <span className="sr-only">
             {m.role === "user" ? t("console.you") : t("console.saathi")}:{" "}
           </span>
-          {m.text}
+          {m.status === "error" ? errorCodeText(t, m.errorCode) : m.text}
           {m.role === "assistant" && m.status === "streaming" && !m.text ? (
             <Loader size="sm" label={t("common.loading")} />
           ) : null}
@@ -63,8 +64,12 @@ export function Transcript({
           ) : null}
           {m.role === "assistant" && (m.model || m.requestId) ? (
             <span className="mt-1 block text-[11px] opacity-60">
-              {m.model ? t("console.model", { model: m.model }) : null}
-              {m.requestId ? ` · ${t("common.requestId", { id: m.requestId })}` : null}
+              {[
+                m.model ? t("console.model", { model: m.model }) : null,
+                m.requestId ? t("common.requestId", { id: m.requestId }) : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </span>
           ) : null}
         </motion.div>

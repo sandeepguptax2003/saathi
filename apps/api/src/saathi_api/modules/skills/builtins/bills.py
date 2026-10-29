@@ -44,9 +44,15 @@ class BillsSkill:
         if args.action == "list":
             due_soon = [b for b in items if (b.due_date - today).days <= 7]
             total = sum(b.amount_inr for b in due_soon)
+            details = "; ".join(
+                f"{b['biller']} {b['amount']} due {b['dueDate']} "
+                f"({'overdue' if b['overdue'] else str(b['daysLeft']) + ' days left'})"
+                for b in unpaid
+            )
             return SkillOutput(
                 summary=(
-                    f"{len(due_soon)} bills due within 7 days, total {loader.format_inr(total)}."
+                    f"{len(due_soon)} bills due within 7 days, total {loader.format_inr(total)}. "
+                    f"Bills: {details}."
                 ),
                 data={"bills": unpaid},
             )

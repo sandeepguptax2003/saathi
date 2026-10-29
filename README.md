@@ -6,8 +6,6 @@
 
 <!-- Replace the three placeholders before submission. Screenshot/GIF goes here: docs/assets/hero.gif -->
 
-[![CI](https://github.com/sandeepguptax2003/saathi/actions/workflows/ci.yml/badge.svg)](https://github.com/sandeepguptax2003/saathi/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/sandeepguptax2003/saathi/actions/workflows/codeql.yml/badge.svg)](https://github.com/sandeepguptax2003/saathi/actions/workflows/codeql.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 ---
@@ -161,16 +159,16 @@ make lint        # ruff, mypy --strict, eslint, prettier, tsc, gitleaks
 make e2e         # Playwright against the running stack (LLM mocked)
 ```
 
-CI runs all of the above plus migrations up/down, RLS checks, Lighthouse (≥ 90), Trivy, CodeQL, and a nightly live Nemotron Nano smoke test.
+Run these checks locally before pushing.
 
 ## Deployment
 
 | Piece | Where | How |
 |---|---|---|
 | Web | Vercel Hobby | Git integration: preview per PR, production on `main` |
-| API | Render free web service (Docker, Singapore) | [`infra/render.yaml`](infra/render.yaml); `deploy-api.yml` calls the deploy hook after CI is green, then checks `/ready` |
+| API | Render free web service (Docker, Singapore) | [`infra/render.yaml`](infra/render.yaml); Render auto-deploys on push to main |
 | DB + Auth | Supabase free (ap-south-1) | Alembic migrations + [`infra/supabase/`](infra/supabase) SQL |
-| Keep-alive | cron-job.org (primary, 10 min) + `keepalive.yml` (backup, 14 min) | pings `/health` |
+| Keep-alive | `keepalive.yml` (every 14 min) | pings `/health` |
 
 ## Project structure
 
@@ -181,7 +179,7 @@ saathi/
 │   └── web/          # Next.js 15 app
 ├── infra/            # docker-compose, render.yaml, supabase SQL
 ├── docs/             # ADRs, demo script
-├── .github/          # CI, deploy, keepalive, CodeQL, templates
+├── .github/          # keepalive workflow, templates
 └── Makefile
 ```
 

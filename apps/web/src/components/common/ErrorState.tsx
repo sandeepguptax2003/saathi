@@ -4,6 +4,7 @@ import { AlertTriangleIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { isApiError } from "@/lib/api/errors";
+import { errorText } from "@/lib/i18n/errorText";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +19,7 @@ export interface ErrorStateProps {
 export function ErrorState({ error, title, message, onRetry, className }: ErrorStateProps) {
   const t = useT();
   const requestId = isApiError(error) ? error.requestId : undefined;
-  const detail =
-    message ?? (error instanceof Error ? error.message : undefined) ?? t("common.somethingWrong");
+  const detail = message ?? errorText(t, error);
   return (
     <div
       role="alert"
