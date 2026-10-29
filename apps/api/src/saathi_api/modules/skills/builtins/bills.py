@@ -9,7 +9,6 @@ from saathi_api.core.errors import NotFound, Unprocessable
 from saathi_api.modules.skills.registry import SkillContext, SkillOutput, expect_args
 from saathi_api.seed import loader
 
-
 CATEGORY_ALIASES = {
     "bijli": "electricity",
     "light": "electricity",
@@ -34,7 +33,11 @@ class BillsArgs(BaseModel):
     @classmethod
     def _normalize_action(cls, value: object) -> object:
         if isinstance(value, str):
-            return "pay" if "pay" in value.lower() else "list"
+            lowered = value.lower()
+            if "pay" in lowered:
+                return "pay"
+            if any(word in lowered for word in ("list", "show", "check", "due", "get")):
+                return "list"
         return value
 
 
