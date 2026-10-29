@@ -33,7 +33,7 @@ function Form({ me }: { me: Me }) {
       displayName: me.displayName ?? "",
       locale: me.locale,
       timezone: me.timezone,
-      dailyBudgetUsd: me.dailyBudgetUsd,
+      dailyBudgetUsd: me.dailyBudgetUsd ?? 1,
     },
   });
   const errors = form.formState.errors;

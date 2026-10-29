@@ -26,12 +26,15 @@ export function AppHeader({ apiReady }: { apiReady: boolean }) {
 
   return (
     <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 md:h-14 md:flex-nowrap md:py-0">
         <Link href="/" className="flex items-center gap-2 font-semibold">
           <span aria-hidden="true">🪔</span>
           {t("app.name")}
         </Link>
-        <nav aria-label="Main" className="-mx-1 flex flex-1 gap-1 overflow-x-auto">
+        <nav
+          aria-label="Main"
+          className="order-last -mx-1 flex w-full flex-wrap gap-1 md:order-none md:w-auto md:flex-1 md:flex-nowrap"
+        >
           {NAV.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
@@ -54,7 +57,7 @@ export function AppHeader({ apiReady }: { apiReady: boolean }) {
             );
           })}
         </nav>
-        <div className="flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-1">
           <LocaleToggle />
           <ThemeToggle />
         </div>

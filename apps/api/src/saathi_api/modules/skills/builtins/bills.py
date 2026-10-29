@@ -14,12 +14,16 @@ class BillsArgs(BaseModel):
     model_config = ConfigDict(extra="ignore")
     action: Literal["list", "pay"] = "list"
     bill_id: str | None = None
+    category: str | None = None
 
 
 class BillsSkill:
     name: ClassVar[str] = "bills"
     description: ClassVar[str] = (
-        "List upcoming bills; 'pay' proposes a payment for approval (simulated)"
+        "List upcoming bills (action=list), or pay one (action=pay) which only proposes the "
+        "payment for the user's approval. For pay, set category when the user names the bill "
+        "type: bijli/electricity=electricity, phone/mobile=mobile, card=credit_card, "
+        "wifi/internet=internet, LIC/insurance=insurance"
     )
     requires_approval: ClassVar[bool] = True
     runnable_via_api: ClassVar[bool] = True
@@ -59,7 +63,11 @@ class BillsSkill:
 
         target = next((b for b in items if b.id == args.bill_id), None) if args.bill_id else None
         if target is None and args.bill_id is None:
-            target = items[0] if items else None  # most urgent
+            wanted = (args.category or "").strip().lower()
+            matches = [b for b in items if not wanted or b.category == wanted]
+            target = matches[0] if matches else None  # most urgent
+        if target is None and args.category is not None:
+            raise NotFound(f"No {args.category} bill found")
         if target is None:
             raise NotFound("Bill not found") if args.bill_id else Unprocessable("No bills to pay")
         summary = (
