@@ -269,7 +269,7 @@ class LLMService:
             return decision is not None and decision.confidence >= threshold
 
         result = await self.complete_with_escalation(
-            messages, quality_ok=good, json_mode=True, max_tokens=256
+            messages, quality_ok=good, json_mode=True, max_tokens=1536
         )
         parsed = parse(result)
         decision = parsed or RouteDecision(intent="chat", confidence=0.0)

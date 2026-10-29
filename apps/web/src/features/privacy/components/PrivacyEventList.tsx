@@ -26,7 +26,11 @@ export function PrivacyEventList() {
             <span className="text-xs text-muted-foreground">
               {formatDateTime(event.createdAt, bcp47)}
             </span>
-            <EntityCountList counts={event.entityCounts} />
+            {Object.values(event.entityCounts).some((n) => n > 0) ? (
+              <EntityCountList counts={event.entityCounts} />
+            ) : (
+              <span className="text-sm text-muted-foreground">{t("privacy.events.none")}</span>
+            )}
           </li>
         ))}
       </ul>

@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     llm_connect_timeout_s: float = Field(default=5.0, gt=0, le=30)
     llm_max_retries: int = Field(default=3, ge=1, le=6)
     llm_retry_base_delay_s: float = Field(default=0.5, ge=0)
-    llm_max_tokens: int = Field(default=512, ge=16, le=8192)
+    llm_max_tokens: int = Field(default=2048, ge=16, le=8192)
     llm_router_confidence_min: float = Field(default=0.6, ge=0, le=1)
     circuit_failure_threshold: int = Field(default=5, ge=1)
     circuit_reset_s: float = Field(default=30.0, gt=0)
