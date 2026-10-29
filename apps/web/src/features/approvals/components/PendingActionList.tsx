@@ -33,8 +33,8 @@ export function PendingActionList({
     return (
       <EmptyState
         icon={ShieldCheckIcon}
-        title={t("approvals.empty.title")}
-        description={t("approvals.empty.body")}
+        title={t(status === "pending" ? "approvals.empty.title" : "approvals.empty.other")}
+        description={status === "pending" ? t("approvals.empty.body") : undefined}
       />
     );
   }
