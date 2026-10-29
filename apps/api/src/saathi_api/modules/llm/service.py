@@ -271,7 +271,18 @@ class LLMService:
         result = await self.complete_with_escalation(
             messages, quality_ok=good, json_mode=True, max_tokens=256
         )
-        decision = parse(result) or RouteDecision(intent="chat", confidence=0.0)
+        parsed = parse(result)
+        decision = parsed or RouteDecision(intent="chat", confidence=0.0)
+        log.info(
+            "route_decision",
+            intent=decision.intent,
+            skill=decision.skill,
+            confidence=decision.confidence,
+            parsed=parsed is not None,
+            model=result.model,
+            tokens_out=result.tokens_out,
+            chars=len(result.text),
+        )
         decision.model = result.model
         decision.escalated = result.escalated
         return decision
