@@ -2,7 +2,7 @@
 
 > Speak in Hindi, English, or Hinglish. Saathi remembers only what you allow, runs everyday tasks, masks your personal data before any model sees it, and never sends, books, or pays without your tap.
 
-**Live demo:** [saathi-chi-sandy.vercel.app](https://saathi-chi-sandy.vercel.app) (no sign-up: open it and you get a demo session; the free API can take up to a minute to wake on the first visit) · **Demo video:** `<YOUTUBE_URL>` · **Devpost:** `<DEVPOST_URL>`
+**Live demo:** [saathi-chi-sandy.vercel.app](https://saathi-chi-sandy.vercel.app) (no sign-up: open it and you get a demo session; the free API can take up to a minute to wake on the first visit) · **Demo video:** [youtube.com/watch?v=11ExLjcqi3E](https://www.youtube.com/watch?v=11ExLjcqi3E) · **Devpost:** `<DEVPOST_URL>`
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
