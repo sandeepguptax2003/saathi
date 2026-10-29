@@ -3,11 +3,25 @@ from __future__ import annotations
 from typing import Any, ClassVar, Literal
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from saathi_api.core.errors import NotFound, Unprocessable
 from saathi_api.modules.skills.registry import SkillContext, SkillOutput, expect_args
 from saathi_api.seed import loader
+
+
+CATEGORY_ALIASES = {
+    "bijli": "electricity",
+    "light": "electricity",
+    "power": "electricity",
+    "phone": "mobile",
+    "postpaid": "mobile",
+    "card": "credit_card",
+    "credit card": "credit_card",
+    "wifi": "internet",
+    "broadband": "internet",
+    "lic": "insurance",
+}
 
 
 class BillsArgs(BaseModel):
@@ -15,6 +29,13 @@ class BillsArgs(BaseModel):
     action: Literal["list", "pay"] = "list"
     bill_id: str | None = None
     category: str | None = None
+
+    @field_validator("action", mode="before")
+    @classmethod
+    def _normalize_action(cls, value: object) -> object:
+        if isinstance(value, str):
+            return "pay" if "pay" in value.lower() else "list"
+        return value
 
 
 class BillsSkill:
@@ -64,6 +85,7 @@ class BillsSkill:
         target = next((b for b in items if b.id == args.bill_id), None) if args.bill_id else None
         if target is None and args.bill_id is None:
             wanted = (args.category or "").strip().lower()
+            wanted = CATEGORY_ALIASES.get(wanted, wanted)
             matches = [b for b in items if not wanted or b.category == wanted]
             target = matches[0] if matches else None  # most urgent
         if target is None and args.category is not None:

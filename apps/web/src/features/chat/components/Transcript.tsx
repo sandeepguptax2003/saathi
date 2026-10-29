@@ -52,7 +52,7 @@ export function Transcript({
           <span className="sr-only">
             {m.role === "user" ? t("console.you") : t("console.saathi")}:{" "}
           </span>
-          {m.status === "error" ? errorCodeText(t, m.errorCode) : m.text}
+          {m.status === "error" ? errorCodeText(t, m.errorCode) : m.text.trimStart()}
           {m.role === "assistant" && m.status === "streaming" && !m.text ? (
             <Loader size="sm" label={t("common.loading")} />
           ) : null}

@@ -277,6 +277,7 @@ class LLMService:
             "route_decision",
             intent=decision.intent,
             skill=decision.skill,
+            args=decision.args,
             confidence=decision.confidence,
             parsed=parsed is not None,
             model=result.model,
