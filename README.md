@@ -2,9 +2,7 @@
 
 > Speak in Hindi, English, or Hinglish. Saathi remembers only what you allow, runs everyday tasks, masks your personal data before any model sees it, and never sends, books, or pays without your tap.
 
-**Live demo:** [saathi-sandeepguptax2003gmailcoms-projects.vercel.app](https://saathi-sandeepguptax2003gmailcoms-projects.vercel.app) (click **Try demo**; the free API may take up to a minute to wake on the first visit) · **Video (≤ 3 min):** `<YOUTUBE_URL>` · **Devpost:** `<DEVPOST_URL>`
-
-<!-- Replace the three placeholders before submission. Screenshot/GIF goes here: docs/assets/hero.gif -->
+**Live demo:** [saathi-chi-sandy.vercel.app](https://saathi-chi-sandy.vercel.app) (no sign-up: open it and you get a demo session; the free API can take up to a minute to wake on the first visit) · **Demo video:** `<YOUTUBE_URL>` · **Devpost:** `<DEVPOST_URL>`
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
@@ -118,12 +116,12 @@ The backend is a **modular monolith**: one deployable service, internally split 
 
 | Layer | Choice |
 |---|---|
-| Web | Next.js 15 (App Router, RSC), TypeScript strict, Tailwind v4, shadcn/ui, TanStack Query, next-intl (hi/en), Serwist PWA |
+| Web | Next.js 15 (App Router, RSC), TypeScript strict, Tailwind v4, shadcn/ui, TanStack Query, built-in Hindi/English dictionaries, Serwist PWA |
 | API | Python 3.12, FastAPI, Pydantic v2, async SQLAlchemy 2 + asyncpg, Alembic, structlog, tenacity, slowapi |
 | Data | Supabase Postgres 16 + pgvector (HNSW), Supabase Auth |
 | LLM | Nebius Token Factory: Nemotron 3 Nano, Nemotron 3 Super, Qwen3-Embedding-8B |
 | Voice | Browser Web Speech API (hi-IN / en-IN) + speech synthesis; faster-whisper and VoxCPM2 for local / offline experiments |
-| Ops | GitHub Actions, Docker, Render (Singapore), Vercel, Sentry, UptimeRobot |
+| Ops | Docker, Render (Singapore), Vercel, Sentry |
 
 ## Quick start
 
@@ -165,7 +163,7 @@ Run these checks locally before pushing.
 
 | Piece | Where | How |
 |---|---|---|
-| Web | Vercel Hobby | Git integration: preview per PR, production on `main` |
+| Web | Vercel Hobby | Git integration: production deploy on every push to `main` (other branches are skipped) |
 | API | Render free web service (Docker, Singapore) | [`infra/render.yaml`](infra/render.yaml); Render auto-deploys on push to main |
 | DB + Auth | Supabase free (ap-south-1) | Alembic migrations + [`infra/supabase/`](infra/supabase) SQL |
 | Keep-alive | `keepalive.yml` (every 14 min) | pings `/health` |
@@ -197,10 +195,9 @@ Built solo by Sandeep Gupta for the **Nebius × NVIDIA Global AI Hackathon** (Pe
 
 ## Feedback on Nebius and NVIDIA tools
 
-<!-- Fill in before submission: what worked, what was hard, suggestions. -->
-- Token Factory: `<feedback>`
-- Nemotron 3 Nano / Super: `<feedback>`
-- Docs / onboarding: `<feedback>`
+- **Token Factory:** the OpenAI-compatible endpoint meant the stock `openai` SDK worked with only a base URL change, and per-model list prices made a real-time budget meter easy. A usage/cost API per key would remove the need to price tokens client-side.
+- **Nemotron 3 Nano / Super:** Nano is fast and cheap enough to route every turn, and handles Hinglish well. The reasoning tokens count against `max_tokens`, so a small router budget (256) silently truncated the JSON and every turn fell back to chat; raising it fixed routing. A documented switch to turn reasoning off for strict-JSON calls would help.
+- **Docs / onboarding:** a short "JSON mode + reasoning models" note and a Hinglish example in the quick start would save new builders the same debugging.
 
 ## License
 
